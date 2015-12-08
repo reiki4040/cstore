@@ -4,7 +4,10 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
+
+	"gopkg.in/yaml.v2"
 
 	"github.com/BurntSushi/toml"
 )
@@ -18,6 +21,7 @@ const (
 const (
 	TOML Format = 1 + iota
 	JSON
+	YAML
 )
 
 func NewManager(name, baseDirPath string) (*Manager, error) {
@@ -142,6 +146,10 @@ func NewCStore(name, filePath string, format Format) (*CStore, error) {
 		}
 	case JSON:
 		s = &JsonFile{
+			FilePath: filePath,
+		}
+	case YAML:
+		s = &YamlFile{
 			FilePath: filePath,
 		}
 	default:
@@ -289,6 +297,56 @@ func LoadFromJsonFile(filePath string, p interface{}) error {
 
 	dec := json.NewDecoder(bufio.NewReader(file))
 	return dec.Decode(p)
+}
+
+type YamlFile struct {
+	FilePath string
+}
+
+func (f *YamlFile) Load(p interface{}) error {
+	return LoadFromYamlFile(f.FilePath, p)
+}
+
+func (f *YamlFile) Store(p interface{}) error {
+	return StoreToYamlFile(f.FilePath, p)
+}
+
+func (f *YamlFile) Remove() error {
+	return removeFile(f.FilePath)
+}
+
+func StoreToYamlFile(filePath string, p interface{}) error {
+	f, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	bytes, err := yaml.Marshal(p)
+	if err != nil {
+		return err
+	}
+
+	w := bufio.NewWriter(f)
+	defer w.Flush()
+
+	_, err = w.Write(bytes)
+	return err
+}
+
+func LoadFromYamlFile(filePath string, p interface{}) error {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	yml, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return err
+	}
+
+	return yaml.Unmarshal(yml, p)
 }
 
 func removeFile(filePath string) error {
