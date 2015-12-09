@@ -141,3 +141,42 @@ func TestManager(t *testing.T) {
 		t.Fatalf("Get() should not return %s, because called Remove()", name)
 	}
 }
+
+func TestYaml(t *testing.T) {
+	removeBaseDir(t)
+
+	m, err := NewManager("testing", BASE_DIR)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cs, err := m.New("text.yaml", YAML)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sText := Text{
+		Text: "this message",
+	}
+
+	err = cs.SaveWithoutValidate(&sText)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	gText := Text{}
+	err = cs.GetWithoutValidate(&gText)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = cs.Remove()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = cs.GetWithoutValidate(&Text{})
+	if !os.IsNotExist(err) {
+		t.Fatal(err)
+	}
+}
