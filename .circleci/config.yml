@@ -4,6 +4,6 @@ jobs:
     working_directory: /go/src/github.com/reiki4040/cstore
     docker:
       - image: circleci/golang:1.9
-  steps:
+    steps:
       - checkout
       - run: go test -v
