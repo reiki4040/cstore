@@ -4,6 +4,8 @@ jobs:
     working_directory: /go/src/github.com/reiki4040/cstore
     docker:
       - image: circleci/golang:1.9
-  steps:
+    steps:
       - checkout
-      - run: go test -v
+      - run: go get github.com/BurntSushi/toml
+      - run: go get gopkg.in/yaml.v2
+      - run: go test -v -race ./...
